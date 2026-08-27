@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#059669">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>Mi Ahorro 100</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  
+  :root {
+    --primary: #059669;
+    --primary-dark: #047857;
+    --primary-light: #d1fae5;
+    --bg: #f3f4f6;
+    --card: #ffffff;
+    --text: #111827;
+    --text-secondary: #6b7280;
+    --border: #e5e7eb;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  html, body {
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    max-width: 500px;
+    margin: 0 auto;
+    background: var(--bg);
+    position: relative;
+  }
+
+  /* HEADER */
+  .header {
+    padding: calc(var(--safe-top) + 16px) 20px 16px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    z-index: 10;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .header .subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  /* CONTENT */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px;
+    padding-bottom: calc(80px + var(--safe-bottom));
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab { display: none; }
+  .tab.active { display: block; animation: fadeIn 0.25s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+
+  /* PROGRESS RING */
+  .progress-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 0;
+  }
+  .progress-ring {
+    position: relative;
+    width: 180px;
+    height: 180px;
+  }
+  .progress-ring svg { transform: rotate(-90deg); }
+  .progress-ring circle {
+    fill: none;
+    stroke-width: 14;
+    stroke-linecap: round;
+  }
+  .progress-ring .bg { stroke: var(--primary-light); }
+  .progress-ring .fg {
+    stroke: var(--primary);
+    transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .progress-text {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+  .progress-text .percent {
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--primary);
+    line-height: 1;
+  }
+  .progress-text .label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  /* STATS GRID */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .stat-box {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+  }
+  .stat-box .value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  .stat-box .label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  /* NEXT DEPOSIT CARD */
+  .next-deposit {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 14px;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+  }
+  .next-deposit .label {
+    font-size: 12px;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .next-deposit .amount {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 8px 0;
+  }
+  .next-deposit .detail {
+    font-size: 13px;
+    opacity: 0.9;
+  }
+  .next-deposit .week-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+  }
+
+  /* WEEK LIST */
+  .week-item {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: transform 0.15s;
+  }
+  .week-item:active { transform: scale(0.98); }
+  .week-item.rest {
+    background: var(--primary-light);
+    opacity: 0.7;
+  }
+  .week-item.completed {
+    border-left: 4px solid var(--success);
+  }
+  .week-item.pending {
+    border-left: 4px solid var(--warning);
+  }
+  .week-num {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: var(--primary-light);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .week-item.completed .week-num {
+    background: var(--success);
+    color: white;
+  }
+  .week-item.rest .week-num {
+    background: white;
+    color: var(--text-secondary);
+  }
+  .week-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .week-info .title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .week-info .subtitle {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+  .week-amount {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--primary);
+    flex-shrink: 0;
+  }
+  .week-item.rest .week-amount { color: var(--text-secondary); }
+
+  .check-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .week-item.completed .check-btn {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+  }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding: 8px 0 calc(8px + var(--safe-bottom));
+    z-index: 20;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 0;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: color 0.2s;
+  }
+  .nav-item.active { color: var(--primary); }
+  .nav-item svg { width: 24px; height: 24px; margin-bottom: 2px; }
+  .nav-item .nav-label { font-size: 11px; font-weight: 500; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 24px;
+    width: 100%;
+    max-width: 380px;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal h2 {
+    font-size: 20px;
+    margin-bottom: 6px;
+  }
+  .modal p {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .form-group select, .form-group input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 15px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    outline: none;
+  }
+  .form-group select:focus, .form-group input:focus {
+    border-color: var(--primary);
+  }
+
+  .btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s;
+    font-family: inherit;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+  .btn-secondary {
+    background: var(--bg);
+    color: var(--text);
+    margin-top: 10px;
+  }
+  .btn-danger {
+    background: var(--danger);
+    color: white;
+    margin-top: 10px;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: calc(90px + var(--safe-bottom));
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--text);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 200;
+    opacity: 0;
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+  /* SETTINGS */
+  .setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .setting-item:last-child { border-bottom: none; }
+  .setting-item .label { font-size: 14px; font-weight: 500; }
+  .setting-item .value { font-size: 14px; color: var(--text-secondary); }
+
+  /* MONTH GROUP */
+  .month-group {
+    margin-bottom: 16px;
+  }
+  .month-header {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    padding-left: 4px;
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- HEADER -->
+  <div class="header">
+    <h1 id="headerTitle">Mi Ahorro</h1>
+    <div class="subtitle" id="headerSubtitle">100 depósitos en 1 año</div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <!-- TAB: INICIO -->
+    <div class="tab active" id="tab-home">
+      <div class="next-deposit" id="nextDepositCard">
+        <div class="label">Próximo depósito</div>
+        <div class="amount" id="nextAmount">$0</div>
+        <div class="detail" id="nextDetail">Configura tu plan para comenzar</div>
+        <div class="week-info">
+          <span id="nextWeekLabel">—</span>
+          <span id="nextDateLabel">—</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="progress-container">
+          <div class="progress-ring">
+            <svg width="180" height="180">
+              <circle class="bg" cx="90" cy="90" r="78"></circle>
+              <circle class="fg" id="progressCircle" cx="90" cy="90" r="78"
+                stroke-dasharray="490" stroke-dashoffset="490"></circle>
+            </svg>
+            <div class="progress-text">
+              <div class="percent" id="progressPercent">0%</div>
+              <div class="label">completado</div>
+            </div>
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="value" id="statSaved">$0</div>
+            <div class="label">Ahorrado</div>
+          </div>
+          <div class="stat-box">
+            <div class="value" id="statRemaining">$0</div>
+            <div class="label">Restante</div>
+          </div>
+          <div class="stat-box">
+            <div class="value" id="statDeposits">0/100</div>
+            <div class="label">Depósitos</div>
+          </div>
+          <div class="stat-box">
+            <div class="value" id="statWeeks">0/50</div>
+            <div class="label">Semanas</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Resumen del plan</div>
+        <div style="font-size:14px; color:var(--text-secondary); line-height:1.6;">
+          💰 <strong>Total a ahorrar:</strong> <span id="summaryTotal">$5.050.000</span><br>
+          📅 <strong>Duración:</strong> 52 semanas (50 activas + 2 descanso)<br>
+           <strong>Estrategia:</strong> Pares equilibrados ($101.000/semana)<br>
+           <strong>Inicio:</strong> <span id="summaryStart">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: CALENDARIO -->
+    <div class="tab" id="tab-calendar">
+      <div id="calendarList"></div>
+    </div>
+
+    <!-- TAB: ESTADÍSTICAS -->
+    <div class="tab" id="tab-stats">
+      <div class="card">
+        <div class="card-title">Progreso mensual</div>
+        <div id="monthlyProgress"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Distribución de depósitos</div>
+        <div style="font-size:14px; color:var(--text-secondary); line-height:1.8;">
+          • <strong>50 semanas activas</strong> con 1 par cada una<br>
+          • <strong>2 semanas de descanso</strong> (al final del plan)<br>
+          • Cada par suma exactamente <strong>$101.000</strong><br>
+          • Promedio mensual: <strong>$420.833</strong>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Historial reciente</div>
+        <div id="recentHistory"></div>
+      </div>
+    </div>
+
+    <!-- TAB: CONFIGURACIÓN -->
+    <div class="tab" id="tab-settings">
+      <div class="card">
+        <div class="card-title">Plan actual</div>
+        <div class="setting-item">
+          <span class="label">Mes de inicio</span>
+          <span class="value" id="settingStartMonth">—</span>
+        </div>
+        <div class="setting-item">
+          <span class="label">Año de inicio</span>
+          <span class="value" id="settingStartYear">—</span>
+        </div>
+        <div class="setting-item">
+          <span class="label">Total a ahorrar</span>
+          <span class="value">$5.050.000</span>
+        </div>
+        <div class="setting-item">
+          <span class="label">Depósitos completados</span>
+          <span class="value" id="settingCompleted">0</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Acciones</div>
+        <button class="btn btn-secondary" onclick="openSetupModal()">⚙️ Reconfigurar plan</button>
+        <button class="btn btn-danger" onclick="resetAll()">🗑️ Borrar todo el progreso</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Acerca de</div>
+        <div style="font-size:13px; color:var(--text-secondary); line-height:1.6;">
+          <strong>Mi Ahorro 100</strong> es un sistema de ahorro progresivo basado en 100 depósitos distribuidos equitativamente durante un año. Cada semana realizas 2 depósitos que suman $101.000, haciendo el proceso predecible y manejable.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item active" data-tab="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="nav-label">Inicio</span>
+    </div>
+    <div class="nav-item" data-tab="calendar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="nav-label">Calendario</span>
+    </div>
+    <div class="nav-item" data-tab="stats">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span class="nav-label">Stats</span>
+    </div>
+    <div class="nav-item" data-tab="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span class="nav-label">Ajustes</span>
+    </div>
+  </div>
+</div>
+
+<!-- SETUP MODAL -->
+<div class="modal-overlay hidden" id="setupModal">
+  <div class="modal">
+    <h2>🎯 Configurar plan</h2>
+    <p>Elige cuándo quieres comenzar tu reto de ahorro</p>
+    <div class="form-group">
+      <label>Mes de inicio</label>
+      <select id="startMonth">
+        <option value="0">Enero</option>
+        <option value="1">Febrero</option>
+        <option value="2">Marzo</option>
+        <option value="3">Abril</option>
+        <option value="4">Mayo</option>
+        <option value="5">Junio</option>
+        <option value="6">Julio</option>
+        <option value="7">Agosto</option>
+        <option value="8" selected>Septiembre</option>
+        <option value="9">Octubre</option>
+        <option value="10">Noviembre</option>
+        <option value="11">Diciembre</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Año de inicio</label>
+      <select id="startYear">
+        <option value="2026" selected>2026</option>
+        <option value="2027">2027</option>
+        <option value="2028">2028</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="saveSetup()">Comenzar plan</button>
+    <button class="btn btn-secondary" onclick="closeSetupModal()">Cancelar</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============ DATA ============
+const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const MONTHS_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const TOTAL = 5050000;
+const WEEKS = 52;
+const ACTIVE_WEEKS = 50;
+
+// Generar los 50 pares
+function generatePairs() {
+  const pairs = [];
+  for (let i = 1; i <= 50; i++) {
+    pairs.push({ a: i * 1000, b: (101 - i) * 1000 });
+  }
+  return pairs;
+}
+
+// Estado
+let state = {
+  started: false,
+  startMonth: 8, // Septiembre (0-indexed)
+  startYear: 2026,
+  completedWeeks: [], // índices de semanas completadas (0-51)
+  pairs: generatePairs()
+};
+
+// ============ STORAGE ============
+function saveState() {
+  localStorage.setItem('ahorro100_state', JSON.stringify(state));
+}
+function loadState() {
+  const saved = localStorage.getItem('ahorro100_state');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      state = { ...state, ...parsed };
+    } catch(e) {}
+  }
+}
+
+// ============ UTILS ============
+function formatMoney(n) {
+  return '$' + n.toLocaleString('es-CO');
+}
+
+function getWeekDate(weekIndex) {
+  // weekIndex 0-51, starting from state.startMonth/Year
+  const start = new Date(state.startYear, state.startMonth, 1);
+  // Ajustar al primer lunes
+  const dayOfWeek = start.getDay(); // 0=Dom, 1=Lun...
+  const daysToMonday = dayOfWeek === 0 ? 1 : (dayOfWeek === 1 ? 0 : 8 - dayOfWeek);
+  const firstMonday = new Date(start);
+  firstMonday.setDate(start.getDate() + daysToMonday);
+  const weekDate = new Date(firstMonday);
+  weekDate.setDate(firstMonday.getDate() + weekIndex * 7);
+  return weekDate;
+}
+
+function formatDateShort(date) {
+  return `${date.getDate()} ${MONTHS_SHORT[date.getMonth()]}`;
+}
+
+function getMonthName(monthIndex) {
+  return MONTHS[monthIndex];
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ============ NAVIGATION ============
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    item.classList.add('active');
+    document.getElementById('tab-' + item.dataset.tab).classList.add('active');
+    document.getElementById('headerTitle').textContent = 
+      item.dataset.tab === 'home' ? 'Mi Ahorro' :
+      item.dataset.tab === 'calendar' ? 'Calendario' :
+      item.dataset.tab === 'stats' ? 'Estadísticas' : 'Configuración';
+    renderAll();
+  });
+});
+
+// ============ RENDER ============
+function renderAll() {
+  if (!state.started) {
+    openSetupModal();
+    return;
+  }
+  renderHome();
+  renderCalendar();
+  renderStats();
+  renderSettings();
+}
+
+function renderHome() {
+  // Progreso
+  const completedCount = state.completedWeeks.length;
+  const percent = Math.round((completedCount / ACTIVE_WEEKS) * 100);
+  const circumference = 2 * Math.PI * 78;
+  const offset = circumference - (percent / 100) * circumference;
+  document.getElementById('progressCircle').style.strokeDashoffset = offset;
+  document.getElementById('progressPercent').textContent = percent + '%';
+
+  // Calcular ahorros
+  let saved = 0;
+  state.completedWeeks.forEach(w => {
+    if (w < ACTIVE_WEEKS) {
+      const pair = state.pairs[w];
+      saved += pair.a + pair.b;
+    }
+  });
+  const remaining = TOTAL - saved;
+
+  document.getElementById('statSaved').textContent = formatMoney(saved);
+  document.getElementById('statRemaining').textContent = formatMoney(remaining);
+  document.getElementById('statDeposits').textContent = (completedCount * 2) + '/100';
+  document.getElementById('statWeeks').textContent = completedCount + '/' + ACTIVE_WEEKS;
+
+  // Próximo depósito
+  const nextWeek = state.completedWeeks.length;
+  if (nextWeek >= WEEKS) {
+    document.getElementById('nextAmount').textContent = '🎉 ¡Completado!';
+    document.getElementById('nextDetail').textContent = 'Has terminado tu plan de ahorro';
+    document.getElementById('nextWeekLabel').textContent = '';
+    document.getElementById('nextDateLabel').textContent = '';
+  } else if (nextWeek >= ACTIVE_WEEKS) {
+    document.getElementById('nextAmount').textContent = '🏖️ Descanso';
+    document.getElementById('nextDetail').textContent = 'Semana de descanso';
+    document.getElementById('nextWeekLabel').textContent = 'Semana ' + (nextWeek + 1);
+    const d = getWeekDate(nextWeek);
+    document.getElementById('nextDateLabel').textContent = formatDateShort(d);
+  } else {
+    const pair = state.pairs[nextWeek];
+    const total = pair.a + pair.b;
+    document.getElementById('nextAmount').textContent = formatMoney(pair.a) + ' + ' + formatMoney(pair.b);
+    document.getElementById('nextDetail').textContent = 'Semana ' + (nextWeek + 1) + ' de ' + ACTIVE_WEEKS;
+    document.getElementById('nextWeekLabel').textContent = 'Total: ' + formatMoney(total);
+    const d = getWeekDate(nextWeek);
+    document.getElementById('nextDateLabel').textContent = 'Desde ' + formatDateShort(d);
+  }
+
+  // Resumen
+  const startDate = new Date(state.startYear, state.startMonth, 1);
+  document.getElementById('summaryStart').textContent = MONTHS[state.startMonth] + ' ' + state.startYear;
+}
+
+function renderCalendar() {
+  const list = document.getElementById('calendarList');
+  list.innerHTML = '';
+
+  let currentMonth = -1;
+  let monthGroup = null;
+
+  for (let w = 0; w < WEEKS; w++) {
+    const date = getWeekDate(w);
+    const month = date.getMonth();
+    const year = date.getFullYear();
+    const monthKey = year * 12 + month;
+
+    if (monthKey !== currentMonth) {
+      currentMonth = monthKey;
+      monthGroup = document.createElement('div');
+      monthGroup.className = 'month-group';
+      monthGroup.innerHTML = `<div class="month-header">${MONTHS[month]} ${year}</div>`;
+      list.appendChild(monthGroup);
+    }
+
+    const isRest = w >= ACTIVE_WEEKS;
+    const isCompleted = state.completedWeeks.includes(w);
+    const pair = state.pairs[w];
+
+    const item = document.createElement('div');
+    item.className = 'week-item' + (isRest ? ' rest' : '') + (isCompleted ? ' completed' : ' pending');
+
+    const weekNum = w + 1;
+    let title, subtitle, amount;
+
+    if (isRest) {
+      title = 'Semana de descanso';
+      subtitle = formatDateShort(date);
+      amount = '—';
+    } else {
+      title = `Semana ${weekNum}`;
+      subtitle = `${formatMoney(pair.a)} + ${formatMoney(pair.b)} · ${formatDateShort(date)}`;
+      amount = formatMoney(pair.a + pair.b);
+    }
+
+    item.innerHTML = `
+      <div class="week-num">${isRest ? '🌴' : weekNum}</div>
+      <div class="week-info">
+        <div class="title">${title}</div>
+        <div class="subtitle">${subtitle}</div>
+      </div>
+      <div class="week-amount">${amount}</div>
+      ${!isRest ? `<div class="check-btn">${isCompleted ? '✓' : ''}</div>` : ''}
+    `;
+
+    if (!isRest) {
+      item.addEventListener('click', () => toggleWeek(w));
+    }
+
+    monthGroup.appendChild(item);
+  }
+}
+
+function renderStats() {
+  // Progreso mensual
+  const monthlyDiv = document.getElementById('monthlyProgress');
+  monthlyDiv.innerHTML = '';
+
+  const monthData = {};
+  for (let w = 0; w < ACTIVE_WEEKS; w++) {
+    const date = getWeekDate(w);
+    const key = date.getFullYear() + '-' + date.getMonth();
+    if (!monthData[key]) monthData[key] = { month: MONTHS[date.getMonth()], year: date.getFullYear(), saved: 0, weeks: 0, totalWeeks: 0 };
+    if (state.completedWeeks.includes(w)) {
+      monthData[key].saved += state.pairs[w].a + state.pairs[w].b;
+      monthData[key].weeks++;
+    }
+    monthData[key].totalWeeks++;
+  }
+
+  // Agregar semanas de descanso al último mes
+  for (let w = ACTIVE_WEEKS; w < WEEKS; w++) {
+    const date = getWeekDate(w);
+    const key = date.getFullYear() + '-' + date.getMonth();
+    if (!monthData[key]) monthData[key] = { month: MONTHS[date.getMonth()], year: date.getFullYear(), saved: 0, weeks: 0, totalWeeks: 0 };
+    monthData[key].totalWeeks++;
+  }
+
+  Object.values(monthData).forEach(m => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);';
+    row.innerHTML = `
+      <div>
+        <div style="font-size:14px; font-weight:600;">${m.month} ${m.year}</div>
+        <div style="font-size:12px; color:var(--text-secondary);">${m.weeks} semanas completadas</div>
+      </div>
+      <div style="font-size:15px; font-weight:700; color:var(--primary);">${formatMoney(m.saved)}</div>
+    `;
+    monthlyDiv.appendChild(row);
+  });
+
+  // Historial reciente
+  const histDiv = document.getElementById('recentHistory');
+  histDiv.innerHTML = '';
+  const recent = [...state.completedWeeks].sort((a,b) => b-a).slice(0, 5);
+  if (recent.length === 0) {
+    histDiv.innerHTML = '<div class="empty-state"><div class="icon"></div><div>Aún no has completado depósitos</div></div>';
+  } else {
+    recent.forEach(w => {
+      const pair = state.pairs[w];
+      const date = getWeekDate(w);
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);';
+      row.innerHTML = `
+        <div>
+          <div style="font-size:14px; font-weight:600;">Semana ${w+1}</div>
+          <div style="font-size:12px; color:var(--text-secondary);">${formatDateShort(date)}</div>
+        </div>
+        <div style="font-size:14px; font-weight:700; color:var(--success);">${formatMoney(pair.a + pair.b)}</div>
+      `;
+      histDiv.appendChild(row);
+    });
+  }
+}
+
+function renderSettings() {
+  document.getElementById('settingStartMonth').textContent = MONTHS[state.startMonth];
+  document.getElementById('settingStartYear').textContent = state.startYear;
+  document.getElementById('settingCompleted').textContent = (state.completedWeeks.length * 2) + ' depósitos';
+}
+
+// ============ ACTIONS ============
+function toggleWeek(w) {
+  const idx = state.completedWeeks.indexOf(w);
+  if (idx > -1) {
+    state.completedWeeks.splice(idx, 1);
+    showToast('Semana ' + (w+1) + ' marcada como pendiente');
+  } else {
+    state.completedWeeks.push(w);
+    showToast('✅ ¡Depósito de semana ' + (w+1) + ' registrado!');
+  }
+  saveState();
+  renderAll();
+}
+
+function openSetupModal() {
+  document.getElementById('startMonth').value = state.startMonth;
+  document.getElementById('startYear').value = state.startYear;
+  document.getElementById('setupModal').classList.remove('hidden');
+}
+
+function closeSetupModal() {
+  document.getElementById('setupModal').classList.add('hidden');
+}
+
+function saveSetup() {
+  state.startMonth = parseInt(document.getElementById('startMonth').value);
+  state.startYear = parseInt(document.getElementById('startYear').value);
+  state.started = true;
+  state.completedWeeks = [];
+  saveState();
+  closeSetupModal();
+  renderAll();
+  showToast('🎉 Plan configurado desde ' + MONTHS[state.startMonth] + ' ' + state.startYear);
+}
+
+function resetAll() {
+  if (confirm('¿Seguro que quieres borrar todo el progreso? Esta acción no se puede deshacer.')) {
+    state.completedWeeks = [];
+    saveState();
+    renderAll();
+    showToast('Progreso reiniciado');
+  }
+}
+
+// ============ INIT ============
+loadState();
+renderAll();
+</script>
+</body>
+</html>
