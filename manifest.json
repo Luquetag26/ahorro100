@@ -1,0 +1,15 @@
+{
+  "name": "Mi Ahorro 100",
+  "short_name": "Ahorro100",
+  "start_url": "/mi-ahorro-100/",
+  "display": "standalone",
+  "background_color": "#f3f4f6",
+  "theme_color": "#059669",
+  "icons": [
+    {
+    "src": "icon.svg",
+    "sizes": "any",
+    "type": "image/svg+xml"
+    }
+  ]
+}
